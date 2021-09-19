@@ -1,0 +1,1 @@
+module "codingcrea/favorites_integration"
