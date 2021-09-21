@@ -18,13 +18,13 @@ func GetZhihuFavors(ctx *gin.Context) {
 	limit := ctx.DefaultQuery("limit", "10")
 	offset := ctx.DefaultQuery("offset", "0")
 	if limitInt, err := strconv.Atoi(limit); err != nil || limitInt <= 0 {
-		glog.Error("Invalid \"limit\":%v", limit)
-		utils.CtxJsonOfData(ctx, utils.CodeZhihuInvalidParam, "limit", limit)
+		glog.Errorf("Invalid \"limit\":%v", limit)
+		utils.CtxJsonOfData(ctx, utils.CodeZhihuInvalidParamErr, "limit", limit)
 		return
 	}
 	if offsetInt, err := strconv.Atoi(offset); err != nil || offsetInt < 0 {
-		glog.Error("Invalid \"offset\":%v", offset)
-		utils.CtxJsonOfData(ctx, utils.CodeZhihuInvalidParam, "offset", offset)
+		glog.Errorf("Invalid \"offset\":%v", offset)
+		utils.CtxJsonOfData(ctx, utils.CodeZhihuInvalidParamErr, "offset", offset)
 		return
 	}
 
@@ -35,6 +35,12 @@ func GetZhihuFavors(ctx *gin.Context) {
 		utils.CtxJson(ctx, utils.CodeZhihuFavorsErr)
 		return
 	}
+	if resp.StatusCode != http.StatusOK {
+		glog.Errorf("the api may changed(or other reason), httpcode:%v", resp.StatusCode)
+		utils.CtxJson(ctx, utils.CodeZhihuFavorsErr)
+		return
+	}
+
 	defer resp.Body.Close()
 	respJson, err := ioutil.ReadAll(resp.Body)
 	zhihuFavors := model.ZhihuFavors{}
@@ -56,18 +62,18 @@ func GetZhihuFavorItemsByCid(ctx *gin.Context) {
 	offset := ctx.DefaultQuery("offset", "0")
 	cid := ctx.Param("cid")
 	if limitInt, err := strconv.Atoi(limit); err != nil || limitInt <= 0 {
-		glog.Error("Invalid \"limit\":%v", limit)
-		utils.CtxJsonOfData(ctx, utils.CodeZhihuInvalidParam, "limit", limit)
+		glog.Errorf("Invalid \"limit\":%v", limit)
+		utils.CtxJsonOfData(ctx, utils.CodeZhihuInvalidParamErr, "limit", limit)
 		return
 	}
 	if offsetInt, err := strconv.Atoi(offset); err != nil || offsetInt < 0 {
-		glog.Error("Invalid \"offset\":%v", offset)
-		utils.CtxJsonOfData(ctx, utils.CodeZhihuInvalidParam, "offset", offset)
+		glog.Errorf("Invalid \"offset\":%v", offset)
+		utils.CtxJsonOfData(ctx, utils.CodeZhihuInvalidParamErr, "offset", offset)
 		return
 	}
 	if cidInt, err := strconv.Atoi(cid); err != nil || cidInt <= 0 {
-		glog.Error("Invalid \"cid\":%v", cid)
-		utils.CtxJsonOfData(ctx, utils.CodeZhihuInvalidParam, "cid", cid)
+		glog.Errorf("Invalid \"cid\":%v", cid)
+		utils.CtxJsonOfData(ctx, utils.CodeZhihuInvalidParamErr, "cid", cid)
 		return
 	}
 
@@ -78,12 +84,18 @@ func GetZhihuFavorItemsByCid(ctx *gin.Context) {
 		utils.CtxJson(ctx, utils.CodeZhihuFavorItemsErr)
 		return
 	}
+	if resp.StatusCode != http.StatusOK {
+		glog.Errorf("the api may changed(or other reason), httpcode:%v", resp.StatusCode)
+		utils.CtxJson(ctx, utils.CodeZhihuFavorItemsErr)
+		return
+	}
+
 	defer resp.Body.Close()
 	respJson, err := ioutil.ReadAll(resp.Body)
 	favorItems := model.ZhihuFavorItems{}
 	_ = json.Unmarshal(respJson, &favorItems)
 	if favorItems.Data == nil {
-		glog.Error("not found, \"cid\":%v", cid)
+		glog.Errorf("not found, \"cid\":%v", cid)
 		utils.CtxJsonOfData(ctx, utils.CodeZhihuNotFoundErr, "cid", cid)
 		return
 	}

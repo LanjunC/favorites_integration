@@ -25,6 +25,12 @@ func InitRouter() *gin.Engine {
 			groupV1Bili.GET("favors", v1.GetBiliFavors)
 			groupV1Bili.GET("favor-items/:media_id", v1.GetBiliFavorItemsByMid)
 		}
+
+		groupV1Pinbox := groupV1.Group("pinbox")
+		{
+			groupV1Pinbox.GET("favors", v1.GetPinboxFavors)
+			groupV1Pinbox.GET("favor-items/:cid", v1.GetPinboxFavorItemsByCid)
+		}
 	}
 	return e
 }

@@ -14,12 +14,18 @@ import (
 
 // GetBiliFavors 调bili api获取我的所有收藏夹-created
 func GetBiliFavors(ctx *gin.Context) {
-	resp, err := http.Get(model.GetBiliFavors)
+	resp, err := http.Get(model.GetBiliFavorsApi)
 	if err != nil {
 		glog.Error(err)
 		utils.CtxJson(ctx, utils.CodeBiliFavorsErr)
 		return
 	}
+	if resp.StatusCode != http.StatusOK {
+		glog.Errorf("the api may changed(or other reason), httpcode:%v", resp.StatusCode)
+		utils.CtxJson(ctx, utils.CodeBiliFavorsErr)
+		return
+	}
+
 	defer resp.Body.Close()
 	respJson, err := ioutil.ReadAll(resp.Body)
 	biliFavors := model.BiliFavors{}
@@ -41,17 +47,17 @@ func GetBiliFavorItemsByMid(ctx *gin.Context) {
 	ps := ctx.DefaultQuery("ps", "10")
 	if mediaIdInt, err := strconv.Atoi(mediaId); err != nil || mediaIdInt <= 0 {
 		glog.Error("Invalid \"media_id\":%v", mediaId)
-		utils.CtxJsonOfData(ctx, utils.CodeZhihuInvalidParam, "media_id", mediaId)
+		utils.CtxJsonOfData(ctx, utils.CodeBiliInvalidParamErr, "media_id", mediaId)
 		return
 	}
 	if pnInt, err := strconv.Atoi(pn); err != nil || pnInt < 0 { //pn为0或1都是第一页
 		glog.Error("Invalid \"pn\":%v", pn)
-		utils.CtxJsonOfData(ctx, utils.CodeZhihuInvalidParam, "pn", pn)
+		utils.CtxJsonOfData(ctx, utils.CodeBiliInvalidParamErr, "pn", pn)
 		return
 	}
 	if psInt, err := strconv.Atoi(ps); err != nil || psInt <= 0 {
 		glog.Error("Invalid \"ps\":%v", ps)
-		utils.CtxJsonOfData(ctx, utils.CodeZhihuInvalidParam, "ps", ps)
+		utils.CtxJsonOfData(ctx, utils.CodeBiliInvalidParamErr, "ps", ps)
 		return
 	}
 
@@ -59,9 +65,15 @@ func GetBiliFavorItemsByMid(ctx *gin.Context) {
 	resp, err := http.Get(fmt.Sprintf(model.GetBiliFavorItemsByMidApi, mediaId, pn, ps))
 	if err != nil {
 		glog.Error(err)
-		utils.CtxJson(ctx, utils.CodeZhihuFavorItemsErr)
+		utils.CtxJson(ctx, utils.CodeBiliFavorItemsErr)
 		return
 	}
+	if resp.StatusCode != http.StatusOK {
+		glog.Errorf("the api may changed(or other reason), httpcode:%v", resp.StatusCode)
+		utils.CtxJson(ctx, utils.CodeBiliFavorItemsErr)
+		return
+	}
+
 	defer resp.Body.Close()
 	respJson, err := ioutil.ReadAll(resp.Body)
 	favorItems := model.BiliFavorItems{}
@@ -73,10 +85,13 @@ func GetBiliFavorItemsByMid(ctx *gin.Context) {
 	}
 	favorItems.Message = ""
 	if favorItems.Data == nil {
-		glog.Error("not found, \"media_id\":%v", mediaId)
+		glog.Errorf("not found, \"media_id\":%v", mediaId)
 		utils.CtxJsonOfData(ctx, utils.CodeBiliNotFoundErr, "media_id", mediaId)
 		return
 	}
 
+	for _, media := range favorItems.Data.Medias {
+		media.VisitUrl = fmt.Sprintf(model.VideoVisiUrl, media.BvID)
+	}
 	utils.CtxJsonOfData(ctx, utils.CodeSuccess, "bili_favoritems", favorItems)
 }

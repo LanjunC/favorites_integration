@@ -1,8 +1,9 @@
 package model
 
 const (
-	GetBiliFavors             = "https://api.bilibili.com/x/v3/fav/folder/created/list-all?up_mid=371742091"
+	GetBiliFavorsApi          = "https://api.bilibili.com/x/v3/fav/folder/created/list-all?up_mid=371742091"
 	GetBiliFavorItemsByMidApi = "https://api.bilibili.com/x/v3/fav/resource/list?media_id=%v&pn=%v&ps=%v"
+	VideoVisiUrl              = "https://www.bilibili.com/video/%v"
 )
 
 type BiliFavors struct {
